@@ -1,0 +1,56 @@
+:root {
+    --ss-color-48548: #b32929;
+    --ss-color-48549: #1369a6;
+    --ss-color-48548-dark: #9a1010;
+    --ss-color-48549-dark: #00508d;
+}
+
+
+.site-container {
+    font-family: 'Work Sans', sans-serif;
+}
+
+.primary-navigation,
+.location-quick-links {
+    font-family: 'Domine', serif;
+}
+
+.primary-navigation .page-listing li {
+  font-size: 16px;
+}
+
+.post--title,
+.post-column_set .column--title,
+.post-item_list .item--title,
+.post-gallery .gallery-photo--title,
+.post-menu .item--name,
+.post-pricing_table .plan--title,
+.location-title,
+.footer-container .about-title,
+.social-icons__title {
+    font-family: 'Questrial', sans-serif;
+}
+
+
+.post-button {
+
+    border-style: none;
+
+  border-radius: 31px;
+
+
+    box-shadow: none;
+}
+
+
+body {
+  background-color: #f5f5f5;
+}
+
+body:before {
+    background-image: url(https://d14tal8bchn59o.cloudfront.net/acbh_brfQspg7cBH5MTYg8MnEeEVOSusQFz5urVEYbM/w:1920/plain/https://02f0a56ef46d93f03c90-22ac5f107621879d5667e0d7ed595bdb.ssl.cf2.rackcdn.com/sites/93307/photos/21857709/graber-1556-cellular-shades-rs18-v1_original.png);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+

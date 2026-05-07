@@ -1,0 +1,7 @@
+Start URL: https://chromashadesandblinds.com/
+Pages downloaded: 29
+Assets downloaded: 5
+
+Next:
+  - Preview locally:  python3 -m http.server 5173 -d docs
+  - If paths look off, re-run with a higher --max-pages/--max-assets

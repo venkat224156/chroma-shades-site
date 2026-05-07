@@ -35,6 +35,9 @@ ASSET_ATTRS = {
     "data-bg",
 }
 
+_CSS_URL_RE = re.compile(r"""url\(\s*(?P<q>["']?)(?P<val>[^"')]+)(?P=q)\s*\)""", re.IGNORECASE)
+_CSS_IMPORT_RE = re.compile(r"""@import\s+(?:url\(\s*)?(?P<q>["'])(?P<val>[^"']+)(?P=q)\s*\)?\s*;""", re.IGNORECASE)
+
 
 def normalize_url(url: str) -> str:
     # Strip fragments; keep query (may matter for cache-busting filenames)
@@ -112,6 +115,48 @@ def guess_content_type(path: str) -> str:
         return "font/otf"
     return "application/octet-stream"
 
+
+def rewrite_css_urls(css: str, css_url: str, start_url: str) -> tuple[str, set[str]]:
+    """
+    - Rewrites root-relative same-origin URLs (e.g. /assets/...) to be relative to the CSS file
+      so the site works when hosted under a subpath (GitHub Pages project site).
+    - Returns (rewritten_css, discovered_asset_urls_to_fetch).
+    """
+    discovered: set[str] = set()
+    css_split = urllib.parse.urlsplit(css_url)
+    css_path = css_split.path or "/"
+    css_dir = posixpath.dirname(css_path if css_path.endswith(".css") else css_path + "/")
+
+    def to_rel(asset_abs_url: str) -> str:
+        a = urllib.parse.urlsplit(asset_abs_url)
+        target_path = a.path or "/"
+        # If target is a "route", keep it as a directory link
+        rel = posixpath.relpath(target_path.lstrip("/"), start=css_dir.lstrip("/"))
+        return rel
+
+    def repl_url(m: re.Match) -> str:
+        raw = m.group("val").strip()
+        if not raw or raw.startswith("data:") or raw.startswith("#"):
+            return m.group(0)
+        abs_u = normalize_url(urllib.parse.urljoin(css_url, raw))
+        if not is_http_url(abs_u) or not same_origin(start_url, abs_u):
+            return m.group(0)
+        discovered.add(abs_u)
+        rel = to_rel(abs_u)
+        return f"url({rel})"
+
+    def repl_import(m: re.Match) -> str:
+        raw = m.group("val").strip()
+        abs_u = normalize_url(urllib.parse.urljoin(css_url, raw))
+        if is_http_url(abs_u) and same_origin(start_url, abs_u):
+            discovered.add(abs_u)
+            rel = to_rel(abs_u)
+            return f"@import \"{rel}\";"
+        return m.group(0)
+
+    out = _CSS_URL_RE.sub(repl_url, css)
+    out = _CSS_IMPORT_RE.sub(repl_import, out)
+    return out, discovered
 
 class LinkExtractor(HTMLParser):
     def __init__(self) -> None:
@@ -356,7 +401,20 @@ def main() -> int:
 
         local_path = url_to_local_path(asset_url, out_dir)
         ensure_parent(local_path)
-        local_path.write_bytes(res.data)
+        # If CSS, rewrite root-relative URLs and discover more assets referenced by CSS.
+        if local_path.suffix.lower() == ".css":
+            try:
+                css_text = res.data.decode("utf-8")
+            except UnicodeDecodeError:
+                css_text = res.data.decode("latin-1")
+            rewritten_css, more = rewrite_css_urls(css_text, asset_url, start)
+            local_path.write_text(rewritten_css, encoding="utf-8")
+            for u in sorted(more):
+                if assets_downloaded + len(asset_queue) >= args.max_assets:
+                    break
+                enqueue_asset(u, asset_url)
+        else:
+            local_path.write_bytes(res.data)
         assets_downloaded += 1
         print(f"[asset] OK   {asset_url} -> {local_path.relative_to(out_dir)}")
         time.sleep(args.sleep)

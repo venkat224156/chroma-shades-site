@@ -48,9 +48,18 @@ body {
 }
 
 body:before {
-    background-image: url(https://d14tal8bchn59o.cloudfront.net/acbh_brfQspg7cBH5MTYg8MnEeEVOSusQFz5urVEYbM/w:1920/plain/https://02f0a56ef46d93f03c90-22ac5f107621879d5667e0d7ed595bdb.ssl.cf2.rackcdn.com/sites/93307/photos/21857709/graber-1556-cellular-shades-rs18-v1_original.png);
+    background-image: url(../../../assets/graber-images/gallery/graber-cellular-shades-landscape.png);
   background-position: center center;
   background-repeat: no-repeat;
   background-size: cover;
 }
 
+#post_11013779.parallax .bg-inner,
+#post_11013858.parallax .bg-inner,
+#post_11063153.parallax .bg-inner,
+#post_11057394.parallax .bg-inner {
+  background-attachment: fixed;
+  background-position: center center;
+  background-size: cover;
+  min-height: 100vh;
+}
